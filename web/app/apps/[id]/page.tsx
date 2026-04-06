@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { RiskRatingCard } from '@/components/RiskRatingCard';
@@ -29,7 +28,7 @@ function formatAnalyzedTime(iso: string): string {
 export function generateStaticParams(): Array<{ id: string }> {
   const seen = new Set<string>();
 
-  return getAppsIndex()
+  const params = getAppsIndex()
     .map((app) => app.slug || app.id)
     .filter((id) => {
       if (seen.has(id)) {
@@ -40,6 +39,12 @@ export function generateStaticParams(): Array<{ id: string }> {
       return true;
     })
     .map((id) => ({ id }));
+
+  if (params.length === 0) {
+    return [{ id: '__placeholder__' }];
+  }
+
+  return params;
 }
 
 export async function generateMetadata({ params }: AppDetailPageProps): Promise<Metadata> {
@@ -64,7 +69,17 @@ export default async function AppDetailPage({ params }: AppDetailPageProps): Pro
   const app = getAppDetail(id);
 
   if (!app) {
-    notFound();
+    return (
+      <article className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-900">App Detail Unavailable</h1>
+        <p className="mt-3 text-sm text-slate-600">
+          No app snapshot data is available yet. Run the update pipeline and redeploy to generate detail pages.
+        </p>
+        <Link href="/apps" className="mt-4 inline-flex text-sm font-medium text-slate-900 underline hover:opacity-80">
+          Back to Apps
+        </Link>
+      </article>
+    );
   }
 
   const riskReasons = app.riskReasons.slice(0, 3);

@@ -78,6 +78,24 @@ It runs every week and on manual dispatch:
 - `DEEPSEEK_MODEL`: model name
 - `NEXT_PUBLIC_SITE_URL`: production site URL used by sitemap/robots
 
+## GitHub Pages Deployment
+
+Workflow file: `.github/workflows/deploy-pages.yml`
+
+It deploys on every push to `main` (and manual trigger) using GitHub Actions Pages deployment.
+
+### One-time repo setup
+
+1. Open repository `Settings -> Pages`.
+2. Set **Source** to **GitHub Actions**.
+3. Ensure default branch is `main`.
+
+### Notes
+
+- Next.js is configured with static export (`output: export`).
+- For project pages (`owner/repo`), base path is auto-derived from repository name in Actions.
+- For user/org pages (`owner.github.io` repo), root path deployment is used automatically.
+
 ## Release Checklist
 
 1. `pnpm prisma:generate`

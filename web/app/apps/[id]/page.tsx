@@ -252,6 +252,18 @@ export default async function AppDetailPage({ params }: AppDetailPageProps): Pro
           </div>
         </aside>
       </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-sm text-slate-700">
+          发现链接失效或信息错误？
+          <Link
+            href={`/submit?appName=${encodeURIComponent(app.name)}&privacyUrl=${encodeURIComponent(app.officialPolicyUrl ?? '')}`}
+            className="ml-2 font-medium text-slate-900 underline underline-offset-2"
+          >
+            点此更正
+          </Link>
+        </p>
+      </section>
     </article>
   );
 }

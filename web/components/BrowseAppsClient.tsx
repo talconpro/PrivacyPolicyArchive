@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -159,7 +160,13 @@ export function BrowseAppsClient({ apps, categories }: BrowseAppsClientProps): J
 
       {pagedApps.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600">
-          No apps matched this filter.
+          <p>No apps matched this filter.</p>
+          <Link
+            href={`/submit${keyword ? `?appName=${encodeURIComponent(keyword)}` : ''}`}
+            className="mt-3 inline-flex text-sm font-medium text-slate-900 underline underline-offset-2"
+          >
+            没找到？点此提交
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

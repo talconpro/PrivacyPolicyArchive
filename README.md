@@ -51,12 +51,32 @@ pnpm prisma:generate
 ```bash
 pnpm dev                 # run web
 pnpm run update:policies # run discover/fetch/analyze/version/snapshot pipeline
+pnpm run submissions:process # process pending user submissions -> needs review
+pnpm run submission:server   # start independent submission/admin API server
 pnpm review:queue        # list pending manual review items
 pnpm preflight           # run launch quality checks
 pnpm test                # run unit tests
 pnpm typecheck           # run TS type checks
 pnpm build               # build Next.js static output
 ```
+
+## Submission & Review Backend (Independent Service)
+
+This project keeps static Pages deployment for `web/` and runs submission/review APIs in a separate Node service.
+
+- API base URL for frontend: `NEXT_PUBLIC_SUBMISSION_API_BASE`
+- Start backend locally: `pnpm run submission:server`
+- Default local API port: `8787`
+
+### API Endpoints
+
+- `GET /api/captcha/challenge`
+- `POST /api/submit`
+- `GET /api/submissions/:id`
+- `GET /api/admin/submissions` (Bearer `ADMIN_TOKEN`)
+- `GET /api/admin/submissions/:id` (Bearer `ADMIN_TOKEN`)
+- `POST /api/admin/submissions/:id/approve` (Bearer `ADMIN_TOKEN`)
+- `POST /api/admin/submissions/:id/reject` (Bearer `ADMIN_TOKEN`)
 
 ## Weekly Auto Update (GitHub Actions)
 
@@ -66,10 +86,11 @@ It runs every week and on manual dispatch:
 
 1. install dependencies
 2. run Prisma commands
-3. run `scripts/runUpdate.ts`
-4. run `scripts/preflight.ts` (soft-fail mode)
-5. build Next.js site
-6. auto-commit `web/lib/generated/*` when snapshot changes are detected
+3. run `scripts/processSubmissions.ts`
+4. run `scripts/runUpdate.ts`
+5. run `scripts/preflight.ts` (soft-fail mode)
+6. build Next.js site
+7. auto-commit `web/lib/generated/*` when snapshot changes are detected
 
 ### Required GitHub Secrets
 
@@ -77,6 +98,9 @@ It runs every week and on manual dispatch:
 - `DEEPSEEK_BASE_URL`: optional custom API endpoint (default DeepSeek)
 - `DEEPSEEK_MODEL`: model name
 - `NEXT_PUBLIC_SITE_URL`: production site URL used by sitemap/robots
+- `ADMIN_TOKEN`: token for admin moderation API
+- `SUBMISSION_IP_SALT`: salt value for IP hashing and submission rate limit
+- `NEXT_PUBLIC_SUBMISSION_API_BASE`: public URL of submission API service
 
 ## GitHub Pages Deployment
 
@@ -99,12 +123,13 @@ It deploys on every push to `main` (and manual trigger) using GitHub Actions Pag
 ## Release Checklist
 
 1. `pnpm prisma:generate`
-2. `pnpm run update:policies`
-3. `pnpm preflight` (set `PREFLIGHT_SOFT_FAIL=0` for hard fail)
-4. `pnpm test`
-5. `pnpm typecheck`
-6. `pnpm build`
-7. review generated data under `web/lib/generated/`
+2. `pnpm run submissions:process`
+3. `pnpm run update:policies`
+4. `pnpm preflight` (set `PREFLIGHT_SOFT_FAIL=0` for hard fail)
+5. `pnpm test`
+6. `pnpm typecheck`
+7. `pnpm build`
+8. review generated data under `web/lib/generated/`
 
 ## Preflight Options
 

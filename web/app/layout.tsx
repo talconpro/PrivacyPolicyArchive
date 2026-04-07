@@ -28,6 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }): JSX.E
               <Link href="/compare" className="hover:text-slate-900 hover:underline">
                 Compare
               </Link>
+              <Link href="/submit" className="hover:text-slate-900 hover:underline">
+                Submit
+              </Link>
             </nav>
           </header>
 

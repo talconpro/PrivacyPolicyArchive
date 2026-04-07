@@ -4,6 +4,7 @@ import { SearchBox } from '@/components/SearchBox';
 import { SectionHeader } from '@/components/SectionHeader';
 import { getCategoryEntries, getHighRiskApps, getPopularApps, getSnapshotGeneratedAt } from '@/lib/apps';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const dynamic = 'force-static';
 export const metadata: Metadata = {
@@ -28,6 +29,14 @@ export default function HomePage(): JSX.Element {
         <p className="text-xs text-slate-500">
           Snapshot updated at: {new Date(generatedAt).toLocaleString('en-US', { hour12: false })}
         </p>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+            提交未收录的App
+          </Link>
+          <Link href="/submissions" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:border-slate-400">
+            查询提交状态
+          </Link>
+        </div>
         <SearchBox />
       </section>
 

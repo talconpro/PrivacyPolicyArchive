@@ -54,26 +54,29 @@ jobs:
 
       - name: Run weekly update pipeline
         run: |
-          echo "[3/8] Executing scripts/runUpdate.ts..."
+          echo "[3/8] Processing user submissions..."
+          pnpm run submissions:process
+          echo "Submission processing finished."
+          echo "[4/8] Executing scripts/runUpdate.ts..."
           pnpm run update:policies
           echo "Update pipeline finished."
 
       - name: Run preflight report
         run: |
-          echo "[4/8] Running preflight checks..."
+          echo "[5/8] Running preflight checks..."
           pnpm preflight || true
           echo "Preflight checks completed."
 
       - name: Build Next.js site
         run: |
-          echo "[5/8] Building static/SSG Next.js site..."
+          echo "[6/8] Building static/SSG Next.js site..."
           pnpm build
           echo "Build completed."
 
       - name: Detect generated snapshot changes
         id: snapshot_changes
         run: |
-          echo "[6/8] Detecting snapshot changes..."
+          echo "[7/8] Detecting snapshot changes..."
           if git diff --quiet -- web/lib/generated; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No snapshot changes detected."
@@ -85,7 +88,7 @@ jobs:
       - name: Commit and push snapshot updates
         if: steps.snapshot_changes.outputs.changed == 'true'
         run: |
-          echo "[7/8] Committing generated snapshot changes..."
+          echo "[8/8] Committing generated snapshot changes..."
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add web/lib/generated
@@ -96,9 +99,9 @@ jobs:
       - name: Skip commit when no changes
         if: steps.snapshot_changes.outputs.changed != 'true'
         run: |
-          echo "[7/8] No snapshot changes. Skipping commit step."
+          echo "[8/8] No snapshot changes. Skipping commit step."
 
       - name: Final workflow summary
         run: |
-          echo "[8/8] Weekly update workflow completed successfully."
-          echo "Includes: install, Prisma, update pipeline, preflight report, build, and optional snapshot commit."
+          echo "[9/9] Weekly update workflow completed successfully."
+          echo "Includes: install, Prisma, submission processing, update pipeline, preflight report, build, and optional snapshot commit."

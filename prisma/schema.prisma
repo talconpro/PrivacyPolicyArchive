@@ -35,6 +35,15 @@ enum DocumentType {
   UNKNOWN
 }
 
+enum SubmissionStatus {
+  PENDING
+  PROCESSING
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+  DUPLICATE
+}
+
 model App {
   id              String                @id @default(cuid())
   slug            String?               @unique
@@ -49,9 +58,34 @@ model App {
   policies        PolicyVersion[]
   changes         PolicyChange[]
   changeSummaries PolicyChangeSummary[]
+  submissions     UserSubmission[]
 
   @@index([name])
   @@index([category])
+}
+
+model UserSubmission {
+  id                       String           @id @default(cuid())
+  appName                  String
+  privacyUrl               String
+  termsUrl                 String?
+  submitterEmail           String?
+  ipHash                   String
+  status                   SubmissionStatus @default(PENDING)
+  adminNote                String?
+  appId                    String?          @unique
+  appStoreTrackId          Int?
+  normalizedUrlFingerprint String
+  reviewPayload            String?
+  createdAt                DateTime         @default(now())
+  processedAt              DateTime?
+  approvedAt               DateTime?
+  app                      App?             @relation(fields: [appId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([normalizedUrlFingerprint])
+  @@index([ipHash, createdAt])
 }
 
 model PolicyVersion {

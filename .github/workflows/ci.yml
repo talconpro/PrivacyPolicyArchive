@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npx prisma generate
+      - run: npx prisma db push
+        env:
+          DATABASE_URL: file:./dev.db
+      - run: npm run build
+        env:
+          DATABASE_URL: file:./dev.db
+          NUXT_ADMIN_USERNAME: ${{ secrets.NUXT_ADMIN_USERNAME }}
+          NUXT_ADMIN_PASSWORD: ${{ secrets.NUXT_ADMIN_PASSWORD }}
+          NUXT_ADMIN_TOKEN: ${{ secrets.NUXT_ADMIN_TOKEN }}
+          NUXT_SESSION_SECRET: ${{ secrets.NUXT_SESSION_SECRET }}

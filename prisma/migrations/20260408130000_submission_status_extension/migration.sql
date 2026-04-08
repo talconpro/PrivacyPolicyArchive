@@ -1,0 +1,4 @@
+-- SQLite stores status as free-form TEXT.
+-- This migration documents the allowed new workflow values:
+--   needs_revision, superseded
+-- No physical schema change is required.

@@ -63,10 +63,26 @@ jobs:
           echo "base_path=$BASE" >> "$GITHUB_OUTPUT"
           echo "Using VITE_BASE_PATH=$BASE"
 
+      - name: Resolve API Base URL
+        id: api
+        env:
+          INPUT_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          API_BASE="$INPUT_API_BASE_URL"
+          if [ -z "$API_BASE" ]; then
+            API_BASE="$(grep '^VITE_API_BASE_URL=' .env.production | head -n1 | cut -d'=' -f2-)"
+          fi
+          if [ -z "$API_BASE" ]; then
+            echo "VITE_API_BASE_URL is empty. Please set repo variable VITE_API_BASE_URL or frontend/.env.production."
+            exit 1
+          fi
+          echo "api_base_url=$API_BASE" >> "$GITHUB_OUTPUT"
+          echo "Using VITE_API_BASE_URL=$API_BASE"
+
       - name: Build Frontend
         run: npm run build
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ steps.api.outputs.api_base_url }}
           VITE_BASE_PATH: ${{ steps.base.outputs.base_path }}
 
       - name: SPA Fallback

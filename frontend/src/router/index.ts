@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+﻿import {createRouter, createWebHashHistory} from 'vue-router'
 import { api } from '../api/client'
 import { settings } from '../config/settings'
 
@@ -53,7 +53,7 @@ const routes = [
 ]
 
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
   scrollBehavior(to) {
     if (to.hash) {

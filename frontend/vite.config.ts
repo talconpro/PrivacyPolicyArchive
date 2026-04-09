@@ -3,8 +3,11 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-export default defineConfig(() => {
-  const base = (process.env.VITE_BASE_PATH || '/').trim() || '/'
+export default defineConfig(({mode}) => {
+  // @ts-ignore
+  const base = mode === 'production'
+      ? '/PrivacyPolicyArchive/'
+      : '/'
 
   return {
     base,

@@ -28,6 +28,7 @@ backend/**/__pycache__/
 .env.legacy.*
 !.env.example
 !backend/.env.example
-!frontend/.env.example
+!frontend/.env.development
+!frontend/.env.production
 
 **/*.db

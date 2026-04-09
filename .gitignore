@@ -1,24 +1,33 @@
-# Nuxt dev/build outputs
+﻿# Nuxt legacy outputs
 .output
 .data
 .nuxt
 .nitro
 .cache
-dist
 
-# Node dependencies
-node_modules
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
 
-# Logs
-logs
-*.log
+# Python
+__pycache__/
+*.pyc
+backend/.venv/
+backend/.pytest_cache/
+backend/**/__pycache__/
 
-# Misc
+# IDE
 .DS_Store
 .fleet
 .idea
 
-# Local env files
+# Env
 .env
 .env.*
+.env.legacy.*
 !.env.example
+!backend/.env.example
+!frontend/.env.example
+
+**/*.db

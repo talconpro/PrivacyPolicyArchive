@@ -1,0 +1,24 @@
+name: Weekly Maintenance
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+jobs:
+  weekly-maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npx prisma generate
+      - run: npm run jobs:weekly
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NUXT_DEEPSEEK_API_KEY: ${{ secrets.NUXT_DEEPSEEK_API_KEY }}
+          NUXT_DEEPSEEK_BASE_URL: ${{ secrets.NUXT_DEEPSEEK_BASE_URL }}
+          NUXT_DEEPSEEK_MODEL: ${{ secrets.NUXT_DEEPSEEK_MODEL }}

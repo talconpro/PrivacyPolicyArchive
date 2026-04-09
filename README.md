@@ -1,141 +1,89 @@
-# Privacy Policy Archive
+# AppSignal 隐私政策
 
-A monorepo project for collecting, versioning, and analyzing app privacy policy changes.
+AppSignal 是一个面向普通用户、运营同学和审核人员的隐私政策解读平台。  
+它的目标很直接：用几秒钟看懂一个 App 隐私条款的关键风险点，而不是让用户自己啃几千字原文。
 
-## Tech Stack
+## 这个项目在解决什么问题
 
-- Node.js 20+
-- TypeScript
-- Prisma + SQLite
-- Next.js App Router + TailwindCSS
-- pnpm
+大多数隐私政策都存在这些共性难点：
+- 篇幅长，读完成本高。
+- 法律/合规术语密集，普通用户理解门槛高。
+- 关键条款分散在不同段落，不容易快速定位。
+- 用户很难判断“这个条款对我意味着什么”。
 
-## Project Structure
+AppSignal 通过结构化分析，把“原文很长”转换为“可快速理解的信息卡片”。
 
-- `prisma/`: schema and migrations
-- `scripts/`: pipeline and utility scripts
-- `src/crawler/`: policy fetch and extraction
-- `src/analyzer/`: LLM analysis, normalization, risk scoring
-- `src/lib/`: shared helpers (logger, prisma, snapshot)
-- `web/app/`: Next.js routes and pages
-- `web/lib/generated/`: build-time JSON snapshot for static pages
-- `docs/`: project documentation
+## 核心能力
 
-## Setup
+- 按应用检索隐私分析档案。
+- 输出风险等级、一句话结论、关键发现、白话摘要。
+- 支持应用对比，帮助用户横向判断。
+- 支持用户提交新应用，进入审核流程。
+- 提供开发者申诉通道，支持后台处理与状态追踪。
+- 提供后台运营工具：分析工作台、批量抓取 App Store ID、站点设置等。
 
-```bash
-nvm use
-pnpm install
-cp .env.example .env
+## 用户看到的分析结果
+
+- `risk_level`：低 / 中 / 高 / 严重。[TODO]
+- `one_liner`：一句话快速判断。
+- `key_findings`：重点条款提炼。
+- `plain_summary`：更易读的白话解释。
+- `data_collected` / `data_shared_with` / `user_rights`：帮助用户快速理解数据处理范围与权利入口。
+
+## 产品流程
+
+1. 采集公开可访问的隐私政策文本。
+2. 自动分析生成结构化结果。
+3. 管理后台人工复核与修订。
+4. 发布到前台供用户检索与对比。
+5. 开发者可提交申诉，后台闭环处理。
+
+## 边界与声明
+
+- 平台内容基于公开信息处理与整理，仅供参考。
+- 平台不构成法律建议、合规建议或专业意见。
+- 部分内容由 AI 生成，可能存在理解偏差，请结合官方原文判断。
+- 应用名称、图标、商标归各自权利方所有，仅作信息引用。
+
+## 开发者申诉
+
+- 前台提供申诉提交页面。
+- 后台支持申诉列表、详情、时间线、状态处理。
+- 状态变更为“已解决/已驳回”后，可按配置自动发送邮件通知。
+
+## 快速体验（本地）
+
+### 1) 启动后端
+```powershell
+cd backend
+.\.venv\Scripts\activate
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-`.env` example:
-
-```bash
-DATABASE_URL=file:./prisma/dev.db
-DEEPSEEK_API_KEY=your_key_here
-DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
-DEEPSEEK_MODEL=deepseek-chat
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
+### 2) 初始化样例数据
+```powershell
+cd backend
+$env:PYTHONPATH='.'
+.\.venv\Scripts\python.exe scripts\seed_sample_data.py
 ```
 
-## Database Init
-
-```bash
-pnpm prisma:migrate --name init
-pnpm prisma:generate
+### 3) 启动前端
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
 
-## Local Commands
+前端默认运行在 `http://127.0.0.1:3000`，并将 `/api` 代理到 `http://127.0.0.1:8000`。
 
-```bash
-pnpm dev                 # run web
-pnpm run update:policies # run discover/fetch/analyze/version/snapshot pipeline
-pnpm run submissions:process # process pending user submissions -> needs review
-pnpm run submission:server   # start independent submission/admin API server
-pnpm review:queue        # list pending manual review items
-pnpm preflight           # run launch quality checks
-pnpm test                # run unit tests
-pnpm typecheck           # run TS type checks
-pnpm build               # build Next.js static output
+## 数据库配置（PostgreSQL）
+
+### 1) 修改 `backend/.env` 的 `DATABASE_URL`
+```powershell
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/privacy_policy_archive
 ```
 
-## Submission & Review Backend (Independent Service)
-
-This project keeps static Pages deployment for `web/` and runs submission/review APIs in a separate Node service.
-
-- API base URL for frontend: `NEXT_PUBLIC_SUBMISSION_API_BASE`
-- Start backend locally: `pnpm run submission:server`
-- Default local API port: `8787`
-
-### API Endpoints
-
-- `GET /api/captcha/challenge`
-- `POST /api/submit`
-- `GET /api/submissions/:id`
-- `GET /api/admin/submissions` (Bearer `ADMIN_TOKEN`)
-- `GET /api/admin/submissions/:id` (Bearer `ADMIN_TOKEN`)
-- `POST /api/admin/submissions/:id/approve` (Bearer `ADMIN_TOKEN`)
-- `POST /api/admin/submissions/:id/reject` (Bearer `ADMIN_TOKEN`)
-
-## Weekly Auto Update (GitHub Actions)
-
-Workflow file: `.github/workflows/update.yml`
-
-It runs every week and on manual dispatch:
-
-1. install dependencies
-2. run Prisma commands
-3. run `scripts/processSubmissions.ts`
-4. run `scripts/runUpdate.ts`
-5. run `scripts/preflight.ts` (soft-fail mode)
-6. build Next.js site
-7. auto-commit `web/lib/generated/*` when snapshot changes are detected
-
-### Required GitHub Secrets
-
-- `DEEPSEEK_API_KEY`: API key for analysis
-- `DEEPSEEK_BASE_URL`: optional custom API endpoint (default DeepSeek)
-- `DEEPSEEK_MODEL`: model name
-- `NEXT_PUBLIC_SITE_URL`: production site URL used by sitemap/robots
-- `ADMIN_TOKEN`: token for admin moderation API
-- `SUBMISSION_IP_SALT`: salt value for IP hashing and submission rate limit
-- `NEXT_PUBLIC_SUBMISSION_API_BASE`: public URL of submission API service
-
-## GitHub Pages Deployment
-
-Workflow file: `.github/workflows/deploy-pages.yml`
-
-It deploys on every push to `main` (and manual trigger) using GitHub Actions Pages deployment.
-
-### One-time repo setup
-
-1. Open repository `Settings -> Pages`.
-2. Set **Source** to **GitHub Actions**.
-3. Ensure default branch is `main`.
-
-### Notes
-
-- Next.js is configured with static export (`output: export`).
-- For project pages (`owner/repo`), base path is auto-derived from repository name in Actions.
-- For user/org pages (`owner.github.io` repo), root path deployment is used automatically.
-
-## Release Checklist
-
-1. `pnpm prisma:generate`
-2. `pnpm run submissions:process`
-3. `pnpm run update:policies`
-4. `pnpm preflight` (set `PREFLIGHT_SOFT_FAIL=0` for hard fail)
-5. `pnpm test`
-6. `pnpm typecheck`
-7. `pnpm build`
-8. review generated data under `web/lib/generated/`
-
-## Preflight Options
-
-- `PREFLIGHT_SOFT_FAIL=1`: report issues without failing process
-- `PREFLIGHT_SKIP_LINK_CHECK=1`: skip official link reachability checks
-
-## Disclaimer
-
-Analysis is AI-assisted and for informational reference only. It is not legal advice.
+### 2) 初始化 PostgreSQL 表结构
+```powershell
+alembic upgrade head
+```

@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  @apply bg-abyss text-snow min-h-screen font-body;
+}
+
+body {
+  margin: 0;
+  background-image: radial-gradient(circle at top, rgba(0, 217, 146, 0.08), transparent 30%);
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #9f9f9f #1b2530;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #1b2530;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9f9f9f, #9f9f9f);
+  border-radius: 999px;
+  border: 2px solid #1b2530;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #b8b8b8, #9f9f9f);
+}
+
+.container-shell {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.page-shell {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.panel {
+  @apply rounded-md border border-charcoal bg-carbon shadow-ambient;
+}
+
+.panel-accent {
+  @apply rounded-md border-2 border-signal bg-carbon shadow-ambient;
+}
+
+.label-overline {
+  @apply text-xs uppercase tracking-[0.24em] text-slate;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply font-heading;
+}
+
+a {
+  @apply transition-colors duration-200;
+}
+
+.input-base,
+.textarea-base,
+.select-base {
+  @apply w-full rounded-sm border border-charcoal bg-abyss px-4 py-3 text-snow outline-none ring-0 placeholder:text-slate focus:border-signal;
+}
+
+.textarea-base {
+  @apply min-h-28;
+}
+
+.btn-ghost {
+  @apply rounded-sm border border-charcoal px-4 py-2 text-snow hover:border-signal hover:text-signal disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.btn-primary {
+  @apply rounded-sm border border-charcoal bg-carbon px-4 py-2 text-mint hover:border-signal disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.btn-danger {
+  @apply rounded-sm border border-danger/40 bg-carbon px-4 py-2 text-danger hover:border-danger disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full border border-charcoal px-3 py-1 text-xs uppercase tracking-[0.18em];
+}
+
+.table-shell {
+  @apply min-w-full text-left text-sm;
+}
+
+.table-shell th {
+  @apply px-3 py-3 font-medium text-slate;
+}
+
+.table-shell td {
+  @apply px-3 py-3 align-top;
+}
+
+.kbd {
+  @apply rounded border border-charcoal bg-abyss px-2 py-1 font-mono text-xs text-slate;
+}
+
+.card {
+  @apply panel p-4;
+}

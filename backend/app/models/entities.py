@@ -1,8 +1,7 @@
-﻿from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import BIGINT, Boolean, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
 from sqlalchemy.types import TypeDecorator
 
 from app.db.session import Base
@@ -50,6 +49,10 @@ class PrismaDateTime(TypeDecorator):
         return value
 
 
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 class App(Base):
     __tablename__ = 'App'
 
@@ -75,8 +78,8 @@ class App(Base):
     sourceType: Mapped[str] = mapped_column(String, default='manual')
     sourceSubmissionId: Mapped[str | None] = mapped_column(String)
     analyzedAt: Mapped[datetime | None] = mapped_column(PrismaDateTime)
-    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now(), onupdate=func.now())
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now())
+    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now, onupdate=utc_now)
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now)
     contentHash: Mapped[str | None] = mapped_column(String)
     lastFetchAt: Mapped[datetime | None] = mapped_column(PrismaDateTime)
     lastError: Mapped[str | None] = mapped_column(Text)
@@ -93,7 +96,7 @@ class PolicyVersion(Base):
     analysis: Mapped[dict | None] = mapped_column(JSON)
     diffSummary: Mapped[dict | None] = mapped_column(JSON)
     sourceUrl: Mapped[str | None] = mapped_column(String)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now)
 
 
 class UserSubmission(Base):
@@ -116,8 +119,8 @@ class UserSubmission(Base):
     suggestedRisk: Mapped[str | None] = mapped_column(String)
     analysisDraft: Mapped[dict | None] = mapped_column(JSON)
     linkedAppId: Mapped[str | None] = mapped_column(String)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now())
-    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now(), onupdate=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now)
+    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now, onupdate=utc_now)
     approvedAt: Mapped[datetime | None] = mapped_column(PrismaDateTime)
 
 
@@ -129,7 +132,7 @@ class CrawlJob(Base):
     status: Mapped[str] = mapped_column(String, default='queued')
     targetType: Mapped[str | None] = mapped_column(String)
     targetId: Mapped[str | None] = mapped_column(String)
-    startedAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now())
+    startedAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now)
     finishedAt: Mapped[datetime | None] = mapped_column(PrismaDateTime)
     summary: Mapped[str | None] = mapped_column(Text)
     log: Mapped[str | None] = mapped_column(Text)
@@ -147,7 +150,7 @@ class AuditLog(Base):
     actor: Mapped[str] = mapped_column(String)
     before: Mapped[dict | None] = mapped_column(JSON)
     after: Mapped[dict | None] = mapped_column(JSON)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now)
 
 
 class AppealTicket(Base):
@@ -164,5 +167,5 @@ class AppealTicket(Base):
     status: Mapped[str] = mapped_column(String, default='pending')
     adminNote: Mapped[str | None] = mapped_column(Text)
     processedAt: Mapped[datetime | None] = mapped_column(PrismaDateTime)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now())
-    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, server_default=func.now(), onupdate=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now)
+    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, default=utc_now, onupdate=utc_now)

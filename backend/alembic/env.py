@@ -9,10 +9,13 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+from app.core.config import settings
 from app.db.session import Base
 from app.models import *
 
 config = context.config
+if settings.database_url:
+    config.set_main_option('sqlalchemy.url', settings.database_url)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

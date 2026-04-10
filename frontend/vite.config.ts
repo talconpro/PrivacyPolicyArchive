@@ -1,13 +1,18 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-export default defineConfig(({mode}) => {
-  // @ts-ignore
-  const base = mode === 'production'
-      ? '/PrivacyPolicyArchive/'
-      : '/'
+function normalizeBasePath(path: string | undefined): string {
+  const raw = (path || '/').trim()
+  const withLeadingSlash = raw.startsWith('/') ? raw : `/${raw}`
+  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const base = normalizeBasePath(env.VITE_BASE_PATH || '/')
+  const proxyTarget = env.VITE_DEV_API_PROXY_TARGET || 'http://127.0.0.1:8000'
 
   return {
     base,
@@ -23,7 +28,7 @@ export default defineConfig(({mode}) => {
       strictPort: true,
       proxy: {
         '/api': {
-          target: 'http://101.35.217.181:20320/',
+          target: proxyTarget,
           changeOrigin: true,
         },
       },

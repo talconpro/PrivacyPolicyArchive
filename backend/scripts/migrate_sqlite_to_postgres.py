@@ -5,10 +5,21 @@ import json
 import os
 import sys
 from dataclasses import dataclass
+from datetime import date, datetime, time, timezone
+from decimal import Decimal
 
 from sqlalchemy import Boolean, MetaData, create_engine, func, select
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.sql.sqltypes import JSON
+from sqlalchemy.sql.sqltypes import (
+    BIGINT,
+    JSON,
+    DATE,
+    DATETIME,
+    FLOAT,
+    INTEGER,
+    NUMERIC,
+    TIME,
+)
 
 DEFAULT_SOURCE_URL = "sqlite:///./dev.db"
 
@@ -123,13 +134,147 @@ def _normalize_json(value):
     return value
 
 
+def _parse_datetime_like(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+    if isinstance(value, (int, float)):
+        # Heuristic: Prisma style unix ms is usually >= 10^11
+        seconds = float(value) / 1000.0 if abs(float(value)) > 100_000_000_000 else float(value)
+        return datetime.fromtimestamp(seconds, tz=timezone.utc)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        if text.isdigit():
+            iv = int(text)
+            seconds = iv / 1000.0 if abs(iv) > 100_000_000_000 else float(iv)
+            return datetime.fromtimestamp(seconds, tz=timezone.utc)
+        # common variants
+        normalized = text.replace("Z", "+00:00").replace(" ", "T", 1)
+        return datetime.fromisoformat(normalized)
+    return value
+
+
+def _parse_date_like(value):
+    if value is None:
+        return None
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    dt = _parse_datetime_like(value)
+    if isinstance(dt, datetime):
+        return dt.date()
+    return value
+
+
+def _parse_time_like(value):
+    if value is None:
+        return None
+    if isinstance(value, time):
+        return value
+    if isinstance(value, datetime):
+        return value.timetz() if value.tzinfo else value.time()
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        return time.fromisoformat(text)
+    return value
+
+
+def _parse_int_like(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, datetime):
+        dt = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        return int(dt.timestamp() * 1000)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        if text.isdigit() or (text.startswith("-") and text[1:].isdigit()):
+            return int(text)
+        try:
+            return int(float(text))
+        except Exception:
+            dt = _parse_datetime_like(text)
+            if isinstance(dt, datetime):
+                dt = dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+                return int(dt.timestamp() * 1000)
+    return value
+
+
+def _parse_float_like(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float, Decimal)):
+        return float(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        return float(text)
+    return value
+
+
+def _parse_numeric_like(value):
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        return Decimal(text)
+    return value
+
+
 def _normalize_cell(value, column_type):
     if value is None:
         return None
+
     if isinstance(column_type, Boolean):
+        if isinstance(value, str):
+            lowered = value.strip().lower()
+            if lowered in {"0", "false", "f", "no", "off", ""}:
+                return False
+            if lowered in {"1", "true", "t", "yes", "on"}:
+                return True
         return bool(value)
+
     if isinstance(column_type, JSON):
         return _normalize_json(value)
+
+    if isinstance(column_type, (DATETIME,)):
+        return _parse_datetime_like(value)
+
+    if isinstance(column_type, (DATE,)):
+        return _parse_date_like(value)
+
+    if isinstance(column_type, (TIME,)):
+        return _parse_time_like(value)
+
+    if isinstance(column_type, (INTEGER, BIGINT)):
+        return _parse_int_like(value)
+
+    if isinstance(column_type, (FLOAT,)):
+        return _parse_float_like(value)
+
+    if isinstance(column_type, (NUMERIC,)):
+        return _parse_numeric_like(value)
+
     return value
 
 
@@ -199,12 +344,26 @@ def _copy_single_table(
         batch.append(item)
 
         if len(batch) >= batch_size:
-            target_conn.execute(target_table.insert(), batch)
+            try:
+                target_conn.execute(target_table.insert(), batch)
+            except Exception as exc:
+                sample = batch[0] if batch else {}
+                raise RuntimeError(
+                    f"Insert failed for {source_table_name}->{target_table_name}. "
+                    f"Sample row keys={list(sample.keys())}, sample={sample}"
+                ) from exc
             inserted += len(batch)
             batch.clear()
 
     if batch:
-        target_conn.execute(target_table.insert(), batch)
+        try:
+            target_conn.execute(target_table.insert(), batch)
+        except Exception as exc:
+            sample = batch[0] if batch else {}
+            raise RuntimeError(
+                f"Insert failed for {source_table_name}->{target_table_name}. "
+                f"Sample row keys={list(sample.keys())}, sample={sample}"
+            ) from exc
         inserted += len(batch)
 
     print(f"[COPY] {source_table_name} -> {target_table_name}: {inserted}/{source_count} rows")
@@ -250,6 +409,7 @@ def main():
             if args.truncate_target:
                 _truncate_target_tables(target_conn, target_meta, table_pairs)
             for source_name, target_name in table_pairs:
+                print(f"[STEP] Migrating {source_name} -> {target_name} ...")
                 stats.append(
                     _copy_single_table(
                         source_conn=source_conn,

@@ -1,0 +1,8 @@
+.venv
+.idea
+__pycache__
+*.pyc
+*.pyo
+dev.db
+tests
+scripts/dev.db

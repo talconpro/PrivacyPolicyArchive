@@ -1,5 +1,8 @@
 # AppSignal 隐私政策
 
+<img width="4096" height="1940" alt="image" src="https://github.com/user-attachments/assets/47266174-d0e4-45ca-879c-6fdf6c48acb0" />
+
+
 AppSignal 是一个面向普通用户、运营同学和审核人员的隐私政策解读平台。  
 它的目标很直接：用几秒钟看懂一个 App 隐私条款的关键风险点，而不是让用户自己啃几千字原文。
 
